@@ -95,27 +95,7 @@ def webhook():
 
 @app.route('/set_subitem_date', methods=['POST'])
 def set_subitem_date():
-    from flask import Flask, request, abort, jsonify
-import requests
-from datetime import datetime, timedelta
-
-app = Flask(_name_)
-
-# Replace with your actual Monday.com API key
-API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjQxMDM1MDMyNiwiYWFpIjoxMSwidWlkIjo1NTIyMDQ0LCJpYWQiOiIyMDI0LTA5LTEzVDExOjUyOjQzLjAwMFoiLCJwZXIiOiJtZTp3cml0ZSIsImFjdGlkIjozNzk1MywicmduIjoidXNlMSJ9.hwTlwMwtbhKdZsYcGT7UoENBLZUAxnfUXchj5RZJBz4"
-API_URL = "https://api.monday.com/v2"
-
-#------------------------------------------------
-#------------------------------------------------
-#------------------------------------------------
-#------------------------------------------------
-@app.route('/', methods=['GET'])
-def home():
-    print("Welcome")
-    return "Welcome to the API!"
-
-@app.route('/webhook'…
-if request.method == 'POST':
+    if request.method == 'POST':
         try:
             webhook_data = request.get_json()
             print("Received webhook data:",
