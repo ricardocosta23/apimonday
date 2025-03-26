@@ -385,16 +385,84 @@ def change_subitem_date():
     else:
         abort(400)
 
+API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjI1OTU3MDMyMiwiYWFpIjoxMSwidWlkIjozNDE4MzA0NCwiaWFkIjoiMjAyMy0wNS0zMFQyMzo0NTo0MS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MTMzMzU3NzgsInJnbiI6InVzZTEifQ.wo708JzzeAC1eqo1Gfq1yiPtB4tgppDhKqSPfjToRf8"
+API_URL = "https://api.monday.com/v2"
+BOARD_ID_TO_QUERY = 6712850239
+COLUMN_ID_TO_GET = "conectar_quadros9__1"
+COLUMN_ID_TO_UPDATE = "text_mkpdbm8b"
+
 @app.route('/pressure-copy-items-to-txt', methods=['POST'])
 def pressure_copy_items_to_txt():
     if request.method == 'POST':
-            data = request.get_json()
-            challenge = data['challenge']
-    
-            return jsonify({'challenge': challenge})
-    
-            # print(request.json)
-            # return 'success', 200
+        try:
+            webhook_data = request.get_json()
+            print("Received webhook data:", webhook_data)
+
+            # Assuming the webhook payload has an event object containing the item ID
+            item_id = webhook_data.get('event', {}).get('pulseId')
+
+            if not item_id:
+                print("Error: Could not extract item ID from webhook data.")
+                return jsonify({"error": "Could not extract item ID from webhook data"}), 400
+
+            print(f"Parsed Item ID from webhook: {item_id}")
+
+            headers = {"Authorization": API_KEY, "Content-Type": "application/json"}
+
+            # 1. Query Monday.com to get the value of conectar_quadros9__1
+            query_get_value = f"""
+                query {{
+                  items (ids: [{item_id}], board_ids: [{BOARD_ID}]) {{
+                    column_values (ids: ["{COLUMN_ID_TO_GET}"]) {{
+                      text
+                    }}
+                  }}
+                }}
+            """
+            data_get_value = {'query': query_get_value}
+            monday_response_get = requests.post(url=API_URL, json=data_get_value, headers=headers)
+            monday_data_get = monday_response_get.json()
+
+            if monday_response_get.status_code == 200 and monday_data_get.get('data') and monday_data_get['data'].get('items') and monday_data_get['data']['items'][0].get('column_values'):
+                value_to_paste = monday_data_get['data']['items'][0]['column_values'][0].get('text')
+                print(f"Value of column '{COLUMN_ID_TO_GET}': {value_to_paste}")
+
+                # 2. Update the column text_mkpdbm8b with the retrieved value
+                if value_to_paste is not None:
+                    mutation_update_value = f"""
+                        mutation {{
+                          change_simple_column_value (
+                            item_id: {item_id},
+                            board_id: {BOARD_ID},
+                            column_id: "{COLUMN_ID_TO_UPDATE}",
+                            value: "{value_to_paste.replace('"', '\\"')}"
+                          ) {{
+                            id
+                          }}
+                        }}
+                    """
+                    data_update_value = {'query': mutation_update_value}
+                    monday_response_update = requests.post(url=API_URL, json=data_update_value, headers=headers)
+                    monday_data_update = monday_response_update.json()
+
+                    if monday_response_update.status_code == 200 and monday_data_update.get('data') and monday_data_update['data'].get('change_simple_column_value'):
+                        print(f"Successfully updated column '{COLUMN_ID_TO_UPDATE}' with value: {value_to_paste}")
+                        return jsonify({"message": f"Item ID: {item_id}, Column '{COLUMN_ID_TO_UPDATE}' updated with value from '{COLUMN_ID_TO_GET}'"}), 200
+                    else:
+                        print(f"Error updating column '{COLUMN_ID_TO_UPDATE}' on Monday.com: {monday_response_update.status_code} - {monday_response_update.text}")
+                        return jsonify({"error": f"Error updating column '{COLUMN_ID_TO_UPDATE}' on Monday.com: {monday_response_update.status_code} - {monday_response_update.text}"}), monday_response_update.status_code
+                else:
+                    print(f"Value of column '{COLUMN_ID_TO_GET}' is None, skipping update.")
+                    return jsonify({"message": f"Item ID: {item_id}, Column '{COLUMN_ID_TO_GET}' is None, skipping update of '{COLUMN_ID_TO_UPDATE}'"}), 200
+
+            else:
+                print(f"Error fetching value from column '{COLUMN_ID_TO_GET}' on Monday.com: {monday_response_get.status_code} - {monday_response_get.text}")
+                return jsonify({"error": f"Error fetching value from column '{COLUMN_ID_TO_GET}' on Monday.com: {monday_response_get.status_code} - {monday_response_get.text}"}), monday_response_get.status_code
+
+        except Exception as e:
+            print(f"Error processing webhook data: {e}")
+            return jsonify({"error": f"Error processing webhook data: {e}"}), 400
     else:
-        abort(400)        
+        return jsonify({"error": "Method not allowed"}), 405
+
      
