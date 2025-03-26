@@ -385,8 +385,8 @@ def change_subitem_date():
     else:
         abort(400)
 
-@app.route('/pressure-copy-items-to-text', methods=['POST'])
-def pressure-copy-items-to-text():
+@app.route('/pressure-copy-items-to-txt', methods=['POST'])
+def pressure-copy-items-to-txt():
 if request.method == 'POST':
         data = request.get_json()
         challenge = data['challenge']
