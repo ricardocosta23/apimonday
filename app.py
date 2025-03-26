@@ -385,5 +385,19 @@ def change_subitem_date():
     else:
         abort(400)
 
+        
+@app.route('/pressure-copy-items-to-text', methods=['POST'])
+def pressure-copy-items-to-text():
+if request.method == 'POST':
+        data = request.get_json()
+        challenge = data['challenge']
+
+        return jsonify({'challenge': challenge})
+
+        # print(request.json)
+        # return 'success', 200
+    else:
+        abort(400)        
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
