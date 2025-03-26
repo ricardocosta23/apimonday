@@ -386,15 +386,15 @@ def change_subitem_date():
         abort(400)
 
 @app.route('/pressure-copy-items-to-txt', methods=['POST'])
-def pressure-copy-items-to-txt():
-if request.method == 'POST':
-        data = request.get_json()
-        challenge = data['challenge']
-
-        return jsonify({'challenge': challenge})
-
-        # print(request.json)
-        # return 'success', 200
-    else:
-        abort(400)        
+def pressure_copy_items_to_txt():
+    if request.method == 'POST':
+            data = request.get_json()
+            challenge = data['challenge']
+    
+            return jsonify({'challenge': challenge})
+    
+            # print(request.json)
+            # return 'success', 200
+        else:
+            abort(400)        
      
