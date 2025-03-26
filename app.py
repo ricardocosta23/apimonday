@@ -395,6 +395,6 @@ def pressure_copy_items_to_txt():
     
             # print(request.json)
             # return 'success', 200
-        else:
-            abort(400)        
+    else:
+        abort(400)        
      
