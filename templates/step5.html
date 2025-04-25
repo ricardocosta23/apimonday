@@ -1,0 +1,233 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center mb-4">
+        <h1>Step 5: Execute Script</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="step-indicator">
+            <a href="{{ url_for('step', step=1) }}" class="text-decoration-none">
+                <div class="step completed">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Setup</div>
+                </div>
+            </a>
+            <a href="{{ url_for('step', step=2) }}" class="text-decoration-none">
+                <div class="step completed">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Coordinates</div>
+                </div>
+            </a>
+            <a href="{{ url_for('step', step=3) }}" class="text-decoration-none">
+                <div class="step completed">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Security Number</div>
+                </div>
+            </a>
+            <a href="{{ url_for('step', step=4) }}" class="text-decoration-none">
+                <div class="step completed">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Messages</div>
+                </div>
+            </a>
+            <a href="{{ url_for('step', step=5) }}" class="text-decoration-none">
+                <div class="step active">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Execute</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Import Phone Numbers</h5>
+            </div>
+            <div class="card-body">
+                <p>Upload a CSV file with phone numbers to send messages to.</p>
+
+                <div class="alert alert-info mb-3">
+                    <strong>Important:</strong> The CSV file must contain a column named "Numero de Telefone" with phone numbers in international format (e.g., 551234567890).
+                </div>
+
+                <form action="{{ url_for('process_csv') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">CSV File:</label>
+                        <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-whatsapp">Upload CSV</button>
+                    </div>
+                </form>
+
+                <hr>
+
+                <div class="d-grid gap-2">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('generate_sample_csv') }}" class="btn btn-outline-secondary d-block">Generate Sample CSV</a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('download_sample_csv') }}" class="btn btn-outline-primary d-block">Download Sample CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Phone Numbers</h5>
+            </div>
+            <div class="card-body">
+                {% if phone_numbers %}
+                    <p>{{ phone_numbers|length }} phone numbers loaded:</p>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Phone Number</th>
+                                {% if phone_numbers[0].get('Nome') %}
+                                <th>Name</th>
+                                {% endif %}
+                                {% if phone_numbers[0].get('Email') %}
+                                <th>Email</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for number in phone_numbers %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ number['Numero de Telefone'] }}</td>
+                                    {% if number.get('Nome') %}
+                                    <td>{{ number['Nome'] }}</td>
+                                    {% endif %}
+                                    {% if number.get('Email') %}
+                                    <td>{{ number['Email'] }}</td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-center">No phone numbers have been imported yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Generate and Run Script</h5>
+            </div>
+            <div class="card-body">
+                <p>Generate the AutoHotkey script based on your configuration.</p>
+
+                <div class="alert alert-warning mb-3">
+                    <strong>Validation:</strong>
+                    <ul class="mb-0">
+                        <li>
+                            Security Number: 
+                            {% if config.security_number %}
+                                <span class="text-success">✓ Set</span>
+                            {% else %}
+                                <span class="text-danger">✗ Not set</span>
+                            {% endif %}
+                        </li>
+                        <li>
+                            Coordinates: 
+                            {% if config.coordinate_x != 0 or config.coordinate_y != 0 %}
+                                <span class="text-success">✓ Set ({{ config.coordinate_x }}, {{ config.coordinate_y }})</span>
+                            {% else %}
+                                <span class="text-danger">✗ Not set</span>
+                            {% endif %}
+                        </li>
+                        <li>
+                            Phone Numbers: 
+                            {% if phone_numbers_count > 0 %}
+                                <span class="text-success">✓ {{ phone_numbers_count }} numbers loaded</span>
+                            {% else %}
+                                <span class="text-danger">✗ No numbers loaded</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <form action="{{ url_for('generate_script') }}" method="post">
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-whatsapp" 
+                                        {% if not config.security_number or (config.coordinate_x == 0 and config.coordinate_y == 0) or phone_numbers_count == 0 %}disabled{% endif %}>
+                                    Generate Script
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {% if session.get('generated_script') %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-success">
+                            <strong>Script Generated:</strong> {{ session.get('generated_script') }}
+                            <hr>
+                            <a href="{{ url_for('download_script') }}" class="btn btn-primary">
+                                <i class="fas fa-download"></i> Download AHK Script
+                            </a>
+                            <a href="{{ url_for('download_script', type='bat') }}" class="btn btn-primary">
+                                <i class="fas fa-download"></i> Download BAT Script
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="alert alert-info">
+                    <strong>Note:</strong> The script will be saved to a file that can be run on a Windows system with AutoHotkey installed.
+                    In this web preview, you can generate the script but not actually run it as it requires Windows and AutoHotkey.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Navigation</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('step', step=4) }}" class="btn btn-secondary">
+                        Previous: Messages
+                    </a>
+                    <a href="{{ url_for('step', step=6) }}" class="btn btn-warning">
+                        <i class="fas fa-wrench"></i> Troubleshooting
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        Go to Overview
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
